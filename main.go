@@ -80,7 +80,11 @@ func handleConn(conn net.Conn) {
 
 			// 处理发送消息
 			result := port.Say(conn, args)
+		// 退出 : quit?name(退出者)="aaa"&id(聊天室id)=123
+		case "quit":
+			result := port.Quit(conn, args)
 		}
+
 	}
 }
 

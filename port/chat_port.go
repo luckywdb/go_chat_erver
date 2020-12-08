@@ -10,7 +10,7 @@ import (
 // 登陆
 // 参数：name （用户名）
 // 返回值： ok
-func Login(conn net.Conn,args map[string]string) string {
+func Login(conn net.Conn, args map[string]string) string {
 	fmt.Println(conn.RemoteAddr(), args["name"], "login ...")
 	return "ok"
 }
@@ -37,4 +37,11 @@ func Join(conn net.Conn, args map[string]string) string {
 func Say(conn net.Conn, args map[string]string) string {
 	fmt.Println(conn.RemoteAddr(), args["name"], "in chat room ", args["id"], " say ", args["msg"], " ...")
 	return "ok"
+}
+
+//  退出
+// 参数： name （退出者）& id (聊天室id)
+// 返回值： ok
+func Quit(conn net.Conn, args map[string]string) string {
+	fmt.Println(conn.RemoteAddr(), args["name"], "quit chat room", args["id"], " ...")
 }
