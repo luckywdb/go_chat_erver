@@ -1,17 +1,28 @@
 package port
 
 import (
+	"chat/db"
+	"chat/lib"
+	"chat/role"
+	"chat/room"
 	"fmt"
 	"net"
+	"time"
 )
 
 // 用与和客户端通信
 
 // 登陆
 // 参数：name （用户名）
-// 返回值： ok
+// 返回值： ok|error
 func Login(conn net.Conn, args map[string]string) string {
-	fmt.Println(conn.RemoteAddr(), args["name"], "login ...")
+	// TODO 1. 检查用户是否创建， 没有用户则创建
+	name := args["name"]
+	r := role.CreateRole(name)
+	// 2. 用户登陆
+	r.SetLoginTime(time.Now().Unix())
+	db.UpdateRole(r) // 更新role对象
+	fmt.Println(conn.RemoteAddr(), args["name"], "login ok ...")
 	return "ok"
 }
 
@@ -19,8 +30,19 @@ func Login(conn net.Conn, args map[string]string) string {
 // 参数: name (创建者)
 // 返回值：聊天室id
 func Create(conn net.Conn, args map[string]string) string {
+	id := lib.GetId()
+	title := args["title"]
+	name := args["name"]
+	chatRoom := room.CreatorRoom(id, title, name) // 创建新到聊天室
+	chatRoom.AddMember(name)                      // 把创建者添加到聊天室成员列表
+	db.UpdateChatRoom(chatRoom)
+
+	r := db.GetRole(name)
+	r.AddChatRoomId(id)
+	db.UpdateRole(r)
+
 	fmt.Println(conn.RemoteAddr(), args["name"], "creat a chat room ...")
-	return "123"
+	return id
 }
 
 // 加入聊天室
@@ -44,4 +66,6 @@ func Say(conn net.Conn, args map[string]string) string {
 // 返回值： ok
 func Quit(conn net.Conn, args map[string]string) string {
 	fmt.Println(conn.RemoteAddr(), args["name"], "quit chat room", args["id"], " ...")
+
+	return "ok"
 }

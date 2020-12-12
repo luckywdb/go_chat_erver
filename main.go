@@ -13,7 +13,7 @@ import (
 //4.获取历史聊天记录
 
 // 存储 用户名和对应的socket连接
-var conns = make(map[string]net.Conn)
+var conns = make(chan map[string]net.Conn)
 
 func main() {
 	// 开一个tcp监听
@@ -47,7 +47,6 @@ func loop(listener net.Listener) {
 }
 
 func handleConn(conn net.Conn) {
-
 	for {
 		data := make([]byte, 512)
 
@@ -62,14 +61,34 @@ func handleConn(conn net.Conn) {
 		switch msgs[0] {
 		// 登陆 : login?name(用户名)="aaa"
 		case "login":
-			// 处理登陆
-			result := port.Login(conn, args)
-			conns[args["name"]] = conn
-		// 创建聊天室 : create?name(创建者)="aaa"
+			if checkArgs(args, []string{"name"}) {
+				conns1 := <-conns
+				// 处理登陆
+				result := port.Login(conn, args)
+				conns1[args["name"]] = conn
+				conns <- conns1
+				conn.Write([]byte("result:" + result))
+			} else {
+				conn.Write([]byte("result:args error"))
+			}
+		// 创建聊天室 : create?name(创建者)="aaa"&title(聊天室名字)="；bbb"
 		case "create":
-			// 处理创建聊天室
-			result := port.Create(conn, args)
-			// 返回聊天室 id
+			if checkArgs(args, []string{"name", "title"}) {
+				conns1 := <-conns
+				conns <- conns1
+				// 检查是否已经登陆
+				if _, ok := conns1["name"]; ok { // 已经登陆
+					// 处理创建聊天室
+					result := port.Create(conn, args)
+					// 返回聊天室 id
+					conn.Write([]byte("result:" + result))
+				} else {
+					conn.Write([]byte("result:not login"))
+				}
+			} else {
+				conn.Write([]byte("result:args error"))
+			}
+
 		// 加入聊天室 : join?name(加入者)="aaa"&id(聊天室id)=123
 		case "join":
 			// 处理加入聊天室
@@ -97,4 +116,17 @@ func encode(msg string) map[string]string {
 	}
 
 	return result
+}
+
+// 参数检查
+// 通过返回 true， 不通过返回false
+func checkArgs(args map[string]string, argsName []string) bool {
+	for _, name := range argsName {
+		if _, ok := args[name]; ok {
+			continue
+		} else {
+			return false
+		}
+	}
+	return true
 }
