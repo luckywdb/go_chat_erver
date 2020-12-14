@@ -1,10 +1,14 @@
 package lib
 
+import (
+	"strconv"
+)
+
 // id 计数
-var idNum int
+var idNum = 0
 
 // Id 创建
 func GetId() string {
 	idNum++
-	return string(rune(idNum))
+	return strconv.Itoa(idNum)
 }

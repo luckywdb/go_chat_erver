@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-var connects map[string]net.Conn
+var connects = make(map[string]net.Conn)
 
 // redis 连接池
 var RedisClient *redis.Pool
@@ -100,17 +100,15 @@ func DeleteRole(name string) error {
 func UpdateChatRoomRole(cr room.ChatRoom, r role.Role) error {
 	c := RedisClient.Get()
 	defer c.Close()
-	c.Send("MULTI") // 开启事务
 	chatroom, err := json.Marshal(&cr)
 	rdata, err1 := json.Marshal(&r)
 	if err != nil || err1 != nil {
-		c.Send("DISCARD") // 取消事务
+		//c.Do("DISCARD") // 取消事务
 		fmt.Println(err)
 		fmt.Println(err1)
 		return err
 	}
-	err = c.Send("SET", cr.Id, string(chatroom), r.Name, string(rdata)) // 存储数据
-	_, err = c.Do("EXEC")
+	_, err = c.Do("MSET", cr.Id, string(chatroom), r.Name, string(rdata)) // 存储数据
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -176,3 +174,17 @@ func AddConnects(name string, con net.Conn, connects map[string]net.Conn) {
 func DeleteConnects(name string, _ net.Conn, connects map[string]net.Conn) {
 	delete(connects, name)
 }
+
+// 存储聊天信息
+func UpdateMessage(key int64, value string) error {
+	c := RedisClient.Get()
+	defer c.Close()
+	_, err := c.Do("SET", key, value) // 存储数据
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	return nil
+}
+
+//

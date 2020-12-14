@@ -1,6 +1,9 @@
 package room
 
 import (
+	"chat/message"
+	"encoding/json"
+	"fmt"
 	"net"
 	"time"
 )
@@ -64,7 +67,14 @@ func (cr *ChatRoom) DeleteMember(name string) {
 func (cr ChatRoom) Broadcast(name string, msg string, conns map[string]net.Conn) {
 	for _, who := range cr.Member {
 		if con, ok := conns[who]; ok {
-			con.Write([]byte("say:" + name + "_" + msg))
+			newMessage := message.CreateMessage(name, msg)
+
+			data, err := json.Marshal(&newMessage)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			con.Write(append([]byte("result:"), data...))
 		}
 	}
 }

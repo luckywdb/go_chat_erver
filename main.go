@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"sync"
 )
 
 //1.创建聊天室
@@ -16,8 +17,10 @@ import (
 // 数据库标记 用来控制操作数据库的 goroutine 同一时间只有一个
 var dbState chan bool
 
-func main() {
+var wg sync.WaitGroup
 
+func main() {
+	dbState := make(chan bool)
 	// 开一个tcp监听
 	listener, err := net.Listen("tcp", "127.0.0.1:8088")
 	if err != nil {
@@ -28,12 +31,15 @@ func main() {
 	// 在函数结束时，关闭监听
 	defer listener.Close()
 
+	wg.Add(1)
 	// 等待客户端连接，连接成功后，等待下一个连接
-	go loop(listener)
+	go loop(listener, dbState)
 	dbState <- true
+
+	wg.Wait()
 }
 
-func loop(listener net.Listener) {
+func loop(listener net.Listener, dbState chan bool) {
 	conn, err := listener.Accept()
 	if err != nil {
 		fmt.Println("accept error = ", err)
@@ -42,12 +48,12 @@ func loop(listener net.Listener) {
 
 	fmt.Println(conn.RemoteAddr(), "connect success ...")
 
-	go handleConn(conn)
+	go handleConn(conn, dbState)
 	// 等待下一个客户端连接
-	loop(listener)
+	loop(listener, dbState)
 }
 
-func handleConn(conn net.Conn) {
+func handleConn(conn net.Conn, dbState chan bool) {
 	defer conn.Close()
 	for {
 		data := make([]byte, 512)

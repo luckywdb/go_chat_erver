@@ -76,7 +76,7 @@ func Logout(dbState chan bool, conn net.Conn, args map[string]string) {
 					}
 				}()
 				fmt.Println(conn.RemoteAddr(), args["name"], "logout ok ...")
-				return "ok"
+				return "logout"
 			} else {
 				return "not login"
 			}
@@ -117,9 +117,9 @@ func Create(dbState chan bool, conn net.Conn, args map[string]string) {
 						return "create chat room fail1"
 					}
 				} else {
-					return "create chat room fail1"
+					return "create chat room fail2"
 				}
-				fmt.Println(conn.RemoteAddr(), args["name"], "creat a chat room ...")
+				fmt.Println(conn.RemoteAddr(), args["name"], "creat a chat room id:", id)
 				return id
 			} else {
 				return "not login"
@@ -135,7 +135,9 @@ func Create(dbState chan bool, conn net.Conn, args map[string]string) {
 // 返回值：ok
 func Join(dbState chan bool, conn net.Conn, args map[string]string) {
 	go func() {
+		fmt.Println(dbState)
 		<-dbState // 获取到db操作权限
+		fmt.Println("1111111111")
 		result := func() string {
 			name := args["name"]
 			if db.GetConnects(name) != nil {
@@ -173,7 +175,6 @@ func Join(dbState chan bool, conn net.Conn, args map[string]string) {
 				return "not login"
 			}
 		}()
-
 		conn.Write([]byte("result:" + result))
 		dbState <- true // 释放db操作权限
 	}()
@@ -247,11 +248,12 @@ func Quit(dbState chan bool, conn net.Conn, args map[string]string) {
 					return "no role"
 				}
 				r.DeleteChatRoomId(id)
-				err = db.UpdateRole(r)
+
+				chatRoom.DeleteMember(name)
+				err = db.UpdateChatRoomRole(chatRoom, r)
 				if err != nil {
 					return "update role error"
 				}
-
 				//  向所有在聊天室的在线人员广播消息
 				chatRoom.Broadcast(name, name+" quit chat room", db.GetAllConnects())
 				fmt.Println(conn.RemoteAddr(), args["name"], "quit chat room", args["id"], " ...")
