@@ -1,6 +1,8 @@
 package role
 
-import "time"
+import (
+	"time"
+)
 
 // 聊天用户对象
 
@@ -9,10 +11,10 @@ import "time"
 // loginTime 登陆时间
 // chatRooms 拥有的聊天室id
 type Role struct {
-	name       string
-	createTime int64
-	loginTime  int64
-	chatRooms  []string
+	Name       string   `json:"name"`
+	CreateTime int64    `json:"createTime,string"`
+	LoginTime  int64    `json:"loginTime,string"`
+	ChatRooms  []string `json:"chatRooms"`
 }
 
 // 创建用户
@@ -21,16 +23,11 @@ func CreateRole(name string) Role {
 	return Role{name, now, now, []string{}}
 }
 
-// 设置登陆时间
-func (r *Role) SetLoginTime(time int64) {
-	r.loginTime = time
-}
-
 // 添加聊天室id
 // 成功返回 true， 不成功返回 false
 func (r *Role) AddChatRoomId(id string) bool {
 	notExist := true
-	for _, v := range r.chatRooms {
+	for _, v := range r.ChatRooms {
 		if v == id {
 			notExist = false // id 已经存在 置为false
 			break
@@ -38,17 +35,17 @@ func (r *Role) AddChatRoomId(id string) bool {
 	}
 	//如果id不存在， 添加到id列表中
 	if notExist {
-		r.chatRooms = append(r.chatRooms, id)
+		r.ChatRooms = append(r.ChatRooms, id)
 	}
 	return notExist
 }
 
 // 删除聊天室id
 func (r *Role) DeleteChatRoomId(id string) {
-	for i, v := range r.chatRooms {
+	for i, v := range r.ChatRooms {
 		if v == id {
 			// 找到聊天室id所在位置
-			r.chatRooms = append(r.chatRooms[:i], r.chatRooms[i+1:]...)
+			r.ChatRooms = append(r.ChatRooms[:i], r.ChatRooms[i+1:]...)
 			break
 		}
 	}
