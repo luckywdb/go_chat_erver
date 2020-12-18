@@ -1,10 +1,6 @@
 package room
 
 import (
-	"chat/message"
-	"encoding/json"
-	"fmt"
-	"net"
 	"time"
 )
 
@@ -15,11 +11,11 @@ import (
 // time 创建时间
 // member 成员名
 type ChatRoom struct {
-	Id      string   `json:"id"`
-	Title   string   `json:"title"`
-	Creator string   `json:"creator"`
-	Time    int64    `json:"time,string"`
-	Member  []string `json:",string"`
+	Id      string
+	Title   string
+	Creator string
+	Time    int64
+	Member  []string
 }
 
 // 创建聊天室
@@ -64,17 +60,17 @@ func (cr *ChatRoom) DeleteMember(name string) {
 // 聊天室广播消息
 // name : 谁说话
 // msg : 消息
-func (cr ChatRoom) Broadcast(name string, msg string, conns map[string]net.Conn) {
-	for _, who := range cr.Member {
-		if con, ok := conns[who]; ok {
-			newMessage := message.CreateMessage(name, msg)
-
-			data, err := json.Marshal(&newMessage)
-			if err != nil {
-				fmt.Println(err)
-				continue
-			}
-			con.Write(append([]byte("result:"), data...))
-		}
-	}
-}
+//func (cr ChatRoom) Broadcast(name string, msg []byte, conns map[string]net.Conn) {
+//	for _, who := range cr.Member {
+//		if con, ok := conns[who]; ok {
+//			newMessage := message.CreateMessage(name, msg)
+//
+//			data, err := json.Marshal(&newMessage)
+//			if err != nil {
+//				fmt.Println(err)
+//				continue
+//			}
+//			con.Write(append([]byte("result:"), data...))
+//		}
+//	}
+//}

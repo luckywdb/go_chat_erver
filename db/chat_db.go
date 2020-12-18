@@ -1,13 +1,13 @@
 package db
 
 import (
-	"chat/role"
-	"chat/room"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/gomodule/redigo/redis"
+	"go_chat_server/role"
+	"go_chat_server/room"
 	"net"
-	"strings"
 	"time"
 )
 
@@ -24,8 +24,8 @@ func init() {
 				fmt.Println(err)
 				return nil, err
 			}
-			_, err = c.Do("SELECT", 0)
-			if err != nil {
+
+			if _, err = c.Do("SELECT", 0); err != nil {
 				fmt.Println(err)
 				return nil, err
 			}
@@ -53,8 +53,8 @@ func UpdateRole(r role.Role) error {
 		fmt.Println(err)
 		return err
 	}
-	_, err = c.Do("SET", r.Name, string(data)) // 存储数据
-	if err != nil {
+	// 存储数据
+	if _, err = c.Do("SET", r.Name, string(data)); err != nil {
 		fmt.Println(err)
 		return err
 	}
@@ -62,20 +62,18 @@ func UpdateRole(r role.Role) error {
 }
 
 // 获取role对象
+var ErrRedisNil = errors.New("redigo: nil returned")
+
 func GetRole(name string) (role.Role, error) {
 	c := RedisClient.Get()
 	defer c.Close()
 	r := role.Role{}
 	data, err := redis.String(c.Do("GET", name))
-	if err != nil && strings.Compare(err.Error(), "redigo: nil returned") == 0 { // 当为redigo: nil returned 这个错误时表示，redis中没有数据
-		return r, nil
-	}
 	if err != nil {
 		fmt.Println(err)
 		return r, err
 	}
-	err = json.Unmarshal([]byte(data), &r)
-	if err != nil {
+	if err = json.Unmarshal([]byte(data), &r); err != nil {
 		fmt.Println(err)
 		return r, err
 	}
@@ -86,9 +84,7 @@ func GetRole(name string) (role.Role, error) {
 func DeleteRole(name string) error {
 	c := RedisClient.Get()
 	defer c.Close()
-
-	_, err := c.Do("DEL", name)
-	if err != nil {
+	if _, err := c.Do("DEL", name); err != nil {
 		fmt.Println(err)
 		return err
 	}
@@ -97,19 +93,16 @@ func DeleteRole(name string) error {
 }
 
 // 存储 chat_room 对象
-func UpdateChatRoomRole(cr room.ChatRoom, r role.Role) error {
+func UpdateChatRoom(cr room.ChatRoom) error {
 	c := RedisClient.Get()
 	defer c.Close()
-	chatroom, err := json.Marshal(&cr)
-	rdata, err1 := json.Marshal(&r)
-	if err != nil || err1 != nil {
-		//c.Do("DISCARD") // 取消事务
+	chatRoom, err := json.Marshal(&cr)
+	if err != nil {
 		fmt.Println(err)
-		fmt.Println(err1)
 		return err
 	}
-	_, err = c.Do("MSET", cr.Id, string(chatroom), r.Name, string(rdata)) // 存储数据
-	if err != nil {
+	// 存储数据
+	if _, err = c.Do("SET", cr.Id, string(chatRoom)); err != nil {
 		fmt.Println(err)
 		return err
 	}
@@ -122,15 +115,12 @@ func GetChatRoom(id string) (room.ChatRoom, error) {
 	defer c.Close()
 	cr := room.ChatRoom{}
 	data, err := redis.String(c.Do("GET", id))
-	if err != nil && strings.Compare(err.Error(), "redigo: nil returned") == 0 { // 当为redigo: nil returned 这个错误时表示，redis中没有数据
+	if err != nil { // 当为redigo: nil returned 这个错误时表示，redis中没有数据
+		fmt.Println(err)
 		return cr, nil
 	}
-	if err != nil {
-		fmt.Println(err)
-		return cr, err
-	}
-	err = json.Unmarshal([]byte(data), &cr)
-	if err != nil {
+
+	if err = json.Unmarshal([]byte(data), &cr); err != nil {
 		fmt.Println(err)
 		return cr, err
 	}
@@ -141,9 +131,7 @@ func GetChatRoom(id string) (room.ChatRoom, error) {
 func DeleteChatRoom(id string) error {
 	c := RedisClient.Get()
 	defer c.Close()
-
-	_, err := c.Do("DEL", id)
-	if err != nil {
+	if _, err := c.Do("DEL", id); err != nil {
 		fmt.Println(err)
 		return err
 	}
@@ -176,15 +164,15 @@ func DeleteConnects(name string, _ net.Conn, connects map[string]net.Conn) {
 }
 
 // 存储聊天信息
-func UpdateMessage(key int64, value string) error {
-	c := RedisClient.Get()
-	defer c.Close()
-	_, err := c.Do("SET", key, value) // 存储数据
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	return nil
-}
+//func UpdateMessage(key int64, value string) error {
+//	c := RedisClient.Get()
+//	defer c.Close()
+//	// 存储数据
+//	if _, err := c.Do("SET", key, value); err != nil {
+//		fmt.Println(err)
+//		return err
+//	}
+//	return nil
+//}
 
 //
