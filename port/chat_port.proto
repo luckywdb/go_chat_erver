@@ -1,0 +1,78 @@
+syntax = "proto3";
+option go_package = "./port";
+
+// 消息
+message Msg {
+     string msg_name = 1;        // 协议名
+     bytes data = 2; // 数据
+ }
+
+ // 返回给客户端的消息
+ message MsgReturn {
+     string msg_name = 1;
+     bytes data = 2; // 数据
+ }
+
+// 登录
+message MsgLogin {
+    string name = 1;
+}
+
+// 登录返回
+message MsgLoginReturn {
+     string msg = 1;
+ }
+
+// 登出
+message MsgLogout {
+    string name = 1;
+}
+// 登出返回
+message MsgLogoutReturn {
+     string msg = 1;
+ }
+
+// 创建聊天室
+message MsgCreate {
+    string name = 1;
+    string title = 2;
+}
+// 创建聊天室返回
+message MsgCreateReturn {
+    string msg = 1;
+    string id = 2;
+}
+
+// 加入聊天室
+message MsgJoin {
+    string name = 1;
+    string id = 2;
+}
+// 加入聊天室返回
+message MsgJoinReturn {
+    string msg = 1;
+}
+
+// 在聊天室中说话， 发送消息
+message MsgSay {
+    string name = 1;
+    string id = 2;
+    bytes msg = 3;
+}
+// 在聊天室中说话， 发送消息 返回
+message MsgSayReturn {
+    string msg = 1;
+}
+
+
+
+// 退出聊天室
+message MsgQuit {
+    string name = 1;
+    string id = 2;
+}
+
+//退出聊天返回
+message MsgQuitReturn {
+    string msg = 1;
+}

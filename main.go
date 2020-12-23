@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
+	"go_chat_server/actor"
 	_ "go_chat_server/db"
-	_ "go_chat_server/global"
+	"go_chat_server/global"
 	"go_chat_server/tcp"
 	"net"
 )
@@ -15,6 +16,7 @@ import (
 
 func main() {
 	// 开一个tcp监听
+	RegisterRouts()
 	listener, err := net.Listen("tcp", "127.0.0.1:8088")
 	if err != nil {
 		fmt.Println("lister error = ", err)
@@ -24,5 +26,10 @@ func main() {
 	// 在函数结束时，关闭监听
 	defer listener.Close()
 	go tcp.WaitConnect(listener)
+
+}
+
+func RegisterRouts() {
+	global.ActorsChan[global.RoomManagerActor] = actor.NewRoomManagerActor(global.RoomManagerActor).GetMailBox()
 
 }
